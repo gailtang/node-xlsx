@@ -180,10 +180,7 @@ function getRowNames(sheet) {
     return name2Row;
 }
 
-if (process.argv.length == 3) {
-
-} else {
-    const mappings = require('./mappings.json');
+function processMapping(mappings) {
     mappings.forEach((element, i) => {
         console.log(`Process rule ${i}, type:${element.type}, source sheet: ${element.src_sheet}, destination sheet: ${element.dst_sheet}`);
         switch (element.type) {
@@ -199,6 +196,20 @@ if (process.argv.length == 3) {
     });
 }
 
+if (process.argv.length == 3) {
+    let src_sheets = process.argv[2].split(',');
+    let template = require('./mappings_template.json');
+    src_sheets.forEach((src_sheet) => {
+        template.forEach((e) => {
+            e.src_sheet = src_sheet;
+        })
+        processMapping(template);
+    });
+} else {
+    const mappings = require('./mappings.json');
+    processMapping(mappings);
+}
+
 /* DO SOMETHING WITH workbook HERE */
 let t = m().format('YYYY-MM-DD_HHmmss');
 let output = 'output_' + t + '.xlsx';
@@ -207,6 +218,6 @@ console.log('Done, output is written to file:', output);
 
 console.log('Press any key to exit');
 
-/* process.stdin.setRawMode(true);
+process.stdin.setRawMode(true);
 process.stdin.resume();
-process.stdin.on('data', process.exit.bind(process, 0)); */
+process.stdin.on('data', process.exit.bind(process, 0));

@@ -1,1 +1,1 @@
-node index.js
+node index.js 1ÔÂ,2ÔÂ
