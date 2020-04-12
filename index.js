@@ -197,3 +197,9 @@ let t = m().format('YYYY-MM-DD_hhmmss');
 let output = 'output_' + t + '.xlsx';
 XLSX.writeFile(dst, output);
 console.log('Done, output is written to file:', output);
+
+console.log('Press any key to exit');
+
+process.stdin.setRawMode(true);
+process.stdin.resume();
+process.stdin.on('data', process.exit.bind(process, 0));
