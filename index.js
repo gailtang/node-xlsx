@@ -2,8 +2,6 @@ const XLSX = require('xlsx');
 const m = require('moment');
 let src = XLSX.readFile('source.xlsx');
 let dst = XLSX.readFile('destination.xlsx');
-const mappings = require('./mappings.json');
-
 
 function directMutate(mapping) {
     let src_sheet = src.Sheets[mapping.src_sheet];
@@ -27,6 +25,8 @@ function directMutate(mapping) {
         for (let j = 0; j < mapping.mappings.cols.length; j++) {
             let srcColName = mapping.mappings.cols[j].src;
             let dstColName = mapping.mappings.cols[j].dst;
+            if (dstColName == 'default')
+                dstColName = mapping.src_sheet;
             for (let k = 0; k < mapping.mappings.rows.length; k++) {
                 let srcRowName = mapping.mappings.rows[k].src;
                 let dstRowName = mapping.mappings.rows[k].dst;
@@ -74,7 +74,9 @@ function rtocMutate(mapping) {
     let dst_name2Col = getColNames(dst.Sheets[mapping.dst_sheet]);
     let dst_name2Row = getRowNames(dst.Sheets[mapping.dst_sheet]);
 
-    let dstColName = mapping.default_dst_col
+    let dstColName = mapping.default_dst_col;
+    if (dstColName == 'default')
+        dstColName = mapping.src_sheet;
     let c_dst = dst_name2Col[dstColName];
     let srcSection = mapping.default_src_section;
 
@@ -85,7 +87,7 @@ function rtocMutate(mapping) {
         for (let j = 0; j < m.src.cols.length; j++) {
             try {
                 let srcColName = m.src.cols[j];
-                let dstRowName = m.src.cols[j];
+                let dstRowName = m.dst.cols[j];
                 let dstSection = m.dst.section;
                 let c_src = src_name2Col[srcColName];
                 let r_dst = dst_name2Row[dstRowName][dstSection];
@@ -178,28 +180,33 @@ function getRowNames(sheet) {
     return name2Row;
 }
 
+if (process.argv.length == 3) {
 
-mappings.forEach((element, i) => {
-    console.log(`Process rule ${i}, type:${element.type}, source sheet: ${element.src_sheet}, destination sheet: ${element.dst_sheet}`);
-    switch (element.type) {
-        case 'DIRECT':
-            directMutate(element);
-            break;
-        case 'RTOC':
-            rtocMutate(element);
-            break;
-        default:
-            break;
-    }
-});
+} else {
+    const mappings = require('./mappings.json');
+    mappings.forEach((element, i) => {
+        console.log(`Process rule ${i}, type:${element.type}, source sheet: ${element.src_sheet}, destination sheet: ${element.dst_sheet}`);
+        switch (element.type) {
+            case 'DIRECT':
+                directMutate(element);
+                break;
+            case 'RTOC':
+                rtocMutate(element);
+                break;
+            default:
+                break;
+        }
+    });
+}
+
 /* DO SOMETHING WITH workbook HERE */
-let t = m().format('YYYY-MM-DD_hhmmss');
+let t = m().format('YYYY-MM-DD_HHmmss');
 let output = 'output_' + t + '.xlsx';
 XLSX.writeFile(dst, output);
 console.log('Done, output is written to file:', output);
 
 console.log('Press any key to exit');
 
-process.stdin.setRawMode(true);
+/* process.stdin.setRawMode(true);
 process.stdin.resume();
-process.stdin.on('data', process.exit.bind(process, 0));
+process.stdin.on('data', process.exit.bind(process, 0)); */
